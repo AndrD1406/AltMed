@@ -53,6 +53,7 @@ public class Program
         builder.Services.AddScoped(typeof(IEntityRepository<,>), typeof(EntityRepository<,>));
 
         builder.Services.AddTransient<IJwtService, JwtService>();
+        builder.Services.AddScoped<IPublicationService, PublicationService>();
 
         builder.Services.AddAutoMapper(typeof(MappingProfile));
 

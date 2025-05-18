@@ -52,14 +52,14 @@ namespace AltMed.DataAccess.Migrations
                         new
                         {
                             Id = new Guid("3f1d2e4c-5b6a-7d8e-9f01-2a3b4c5d6e7f"),
-                            ConcurrencyStamp = "af80d7fe-e934-42e2-9e3e-41598cba3a69",
+                            ConcurrencyStamp = "3b221c7f-27df-421e-a427-1cfb6c3e90e0",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = new Guid("4a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d"),
-                            ConcurrencyStamp = "2d86a854-1ef2-4be0-9cae-0bd063a5a6ca",
+                            ConcurrencyStamp = "8450a9a5-20dd-4179-89f1-e623cbdc493d",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -149,16 +149,16 @@ namespace AltMed.DataAccess.Migrations
                         {
                             Id = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bee35d19-abe5-4612-8e82-bae3cd006bfa",
+                            ConcurrencyStamp = "2aa4dbb1-c001-4fbb-b2d4-2b1cdffaee1f",
                             Email = "admin@altmed.local",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@ALTMED.LOCAL",
                             NormalizedUserName = "ADMIN@ALTMED.LOCAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJxLEeyjIgJGU5NWLQPifp50cR3lKBH/YEYxN1Qtg3PE6s8c/K+0YMnH8zC0GoBB3A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOxNXdAYbZfiudufyeHyRiULdrfRj+pKneNp9rueQVwZl7/IE27N9PCdhxJRsFBTNw==",
                             PhoneNumberConfirmed = false,
                             RefreshTokenExpirationDateTime = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            SecurityStamp = "02980353-e6ac-4f5e-9aef-47f05d7a6b4c",
+                            SecurityStamp = "19f440f4-6794-4c3a-8041-d12caeacdeb7",
                             TwoFactorEnabled = false,
                             UserName = "admin@altmed.local"
                         },
@@ -166,16 +166,16 @@ namespace AltMed.DataAccess.Migrations
                         {
                             Id = new Guid("9c8b8e2e-4f3a-4d2e-bf4a-e5c8a1b2c3d4"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6aaa47a9-0271-4893-86ea-7e81baf8323e",
+                            ConcurrencyStamp = "64d74ac8-2217-4239-920b-9593a951368c",
                             Email = "USER@ALTMED.LOCAL",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "USER@ALTMED.LOCAL",
                             NormalizedUserName = "USER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMIGtDEQD4ociGQuHg8I56BZG+/Nf7hUmiopxGFM42hKk136tdA58Kdzmb2ZTvrXmw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECH4FoX7OID/Xk9zkMje61IjFDuAUEjvvEOVM9Q8n2Ns5vudbfi9MR0KDGT5yX5BZw==",
                             PhoneNumberConfirmed = false,
                             RefreshTokenExpirationDateTime = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            SecurityStamp = "8ae7e338-a112-49ad-a69e-5d0761015363",
+                            SecurityStamp = "58e20f04-5026-42a2-ba96-790cca88923f",
                             TwoFactorEnabled = false,
                             UserName = "user@altmed.local"
                         });

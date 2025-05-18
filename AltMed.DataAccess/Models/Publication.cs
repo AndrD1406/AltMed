@@ -18,7 +18,7 @@ public class Publication : IKeyedEntity<Guid>
 
     public string? Image64 { get; set; }
 
-    public DateTime PostedAt { get; set; }
+    public DateTime PostedAt { get; set; } = DateTime.UtcNow;
 
     [ForeignKey(nameof(ApplicationUser))]
     public Guid AuthorId { get; set; }

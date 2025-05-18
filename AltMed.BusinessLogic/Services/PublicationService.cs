@@ -1,4 +1,6 @@
-﻿using AltMed.DataAccess.Models;
+﻿using AltMed.BusinessLogic.Dtos;
+using AltMed.BusinessLogic.Services.Interfaces;
+using AltMed.DataAccess.Models;
 using AltMed.DataAccess.Repository.Base;
 using AutoMapper;
 using System;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace AltMed.BusinessLogic.Services;
 
-public class PublicationService
+public class PublicationService : IPublicationService
 {
     private readonly IEntityRepository<Guid, Publication> repository;
     private readonly IMapper mapper;
@@ -20,5 +22,17 @@ public class PublicationService
         this.mapper = mapper;
     }
 
-    //public 
+    public async Task<Publication> Create(PublicationCreateDto dto, Guid authorId)
+    {
+        var publication = mapper.Map<Publication>(dto);
+        publication.AuthorId = authorId;
+        publication.PostedAt = DateTime.UtcNow;
+
+        return await repository.Create(publication);
+    }
+
+    public Task<Publication> GetById(Guid id)
+    {
+        return repository.GetByIdWithDetails(id, "Author,Likes,Comments");
+    }
 }
