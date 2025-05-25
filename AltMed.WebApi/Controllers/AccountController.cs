@@ -1,4 +1,5 @@
-﻿using AltMed.BusinessLogic.Dtos.Identity;
+﻿using AltMed.BusinessLogic.Dtos;
+using AltMed.BusinessLogic.Dtos.Identity;
 using AltMed.BusinessLogic.Services.Interfaces;
 using AltMed.DataAccess.Identity;
 using AutoMapper;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace AltMed.WebApi.Controllers;
@@ -178,5 +180,58 @@ public class AccountController : ControllerBase
         await userManager.UpdateAsync(user);
 
         return Ok(authenticationResponse);
+    }
+
+    [HttpPost("[action]")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        if (dto.NewPassword != dto.ConfirmPassword)
+            return BadRequest("New password and confirmation do not match.");
+
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (userIdClaim == null) return Unauthorized();
+        var user = await userManager.FindByIdAsync(userIdClaim);
+        if (user == null) return NotFound();
+
+        var result = await userManager.ChangePasswordAsync(
+            user,
+            dto.CurrentPassword,
+            dto.NewPassword
+        );
+
+        if (!result.Succeeded)
+            return BadRequest(result.Errors.Select(e => e.Description));
+
+        return NoContent();
+    }
+
+    [HttpPut("[action]")]
+    [Authorize]
+    [ProducesResponseType(typeof(ProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> EditProfile([FromBody] EditProfileDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+            return Unauthorized();
+
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            return NotFound();
+
+        if (!string.IsNullOrWhiteSpace(dto.Name))
+            user.Name = dto.Name;
+        if (!string.IsNullOrWhiteSpace(dto.Logo))
+            user.Logo = dto.Logo;
+
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return BadRequest(result.Errors.Select(e => e.Description));
+
+        var profileDto = mapper.Map<ProfileDto>(user);
+        return Ok(profileDto);
     }
 }

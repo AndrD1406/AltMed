@@ -25,8 +25,7 @@ public class Publication : IKeyedEntity<Guid>
 
     public virtual ApplicationUser? Author { get; set; }
 
-    public virtual List<Like>? Likes { get; set; 
-    }
+    public virtual List<Like>? Likes { get; set; }
     public Guid? ParentId { get; set; } = null;
     [ForeignKey(nameof(ParentId))]
 
