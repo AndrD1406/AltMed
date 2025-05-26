@@ -228,6 +228,28 @@ public class PublicationService : IPublicationService
 
         return await MapWithLikesAndComments(pageEntities);
     }
+
+    public async Task<IEnumerable<PublicationDto>> SearchAsync(string query, int skipCount, int maxResultCount)
+    {
+        var lowerQuery = (query ?? string.Empty).ToLower();
+
+        var entities = await publicationRepository
+            .Get(
+                skip: skipCount,
+                take: maxResultCount,
+                whereExpression: p => p.Content.ToLower().Contains(lowerQuery),
+                orderBy: new Dictionary<Expression<Func<Publication, object>>, SortDirection>
+                {
+                { p => p.PostedAt, SortDirection.Descending }
+                })
+            .ToListAsync();
+
+        // 3) map to DTOs
+        return entities
+            .Select(p => mapper.Map<PublicationDto>(p))
+            .ToList();
+    }
+
 }
 
 

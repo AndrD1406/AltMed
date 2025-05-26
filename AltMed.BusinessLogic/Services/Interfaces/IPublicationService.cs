@@ -25,4 +25,5 @@ public interface IPublicationService
     Task<CommentDto> AddComment(CommentCreateDto dto);
     Task<IEnumerable<PublicationDto>> GetWithDetailsPaged(int skip, int take);
     Task<IEnumerable<PublicationDto>> GetPublicationsByAuthorPaged(Guid authorId, int skip, int take);
+    Task<IEnumerable<PublicationDto>> SearchAsync(string query, int skipCount, int maxResultCount);
 }

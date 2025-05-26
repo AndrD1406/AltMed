@@ -158,4 +158,36 @@ public class PublicationController : ControllerBase
         var page = await publicationService.GetPublicationsByAuthorPaged(id, skip, take);
         return Ok(page);
     }
+
+    [HttpGet]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<PublicationDto>), StatusCodes.Status200OK)]
+    public Task<IEnumerable<PublicationDto>> Search(string query, int skipCount = 0, int maxResultCount = 10)
+    => publicationService.SearchAsync(query, skipCount, maxResultCount);
+
+    [HttpPut]
+    [Authorize]
+    [ProducesResponseType(typeof(IEnumerable<PublicationDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PublicationDto>> Update(Guid id, [FromBody] PublicationCreateDto dto)
+    {
+        var updated = await publicationService.Update(id, dto);
+        return Ok(updated);
+    }
+
+    [HttpDelete]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await publicationService.Delete(id);
+        return NoContent();
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<CommentDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<CommentDto>>> GetCommentsForPublication(Guid id)
+    {
+        var comments = await publicationService.GetCommentsForPublication(id);
+        return Ok(comments);
+    }
 }
