@@ -1,14 +1,12 @@
 ﻿using AltWirePoint.BusinessLogic.Models;
+using AltWirePoint.BusinessLogic.Models.Publication;
 using AltWirePoint.BusinessLogic.Services.Interfaces;
 using AltWirePoint.DataAccess.Enums;
 using AltWirePoint.DataAccess.Models;
 using AltWirePoint.DataAccess.Repository.Base;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AltWirePoint.BusinessLogic.Services;
 
@@ -28,7 +26,7 @@ public class PublicationService : IPublicationService
         this.mapper = mapper;
     }
 
-    public async Task<PublicationDto> Create(PublicationCreateDto dto, Guid authorId)
+    public async Task<PublicationDto> Create(PublicationCreateRequest dto, Guid authorId)
     {
         var publication = mapper.Map<Publication>(dto);
         publication.AuthorId = authorId;
@@ -83,7 +81,7 @@ public class PublicationService : IPublicationService
         return mapper.Map<IEnumerable<PublicationDto>>(replies);
     }
 
-    public async Task<PublicationDto> Update(Guid id, PublicationCreateDto dto)
+    public async Task<PublicationDto> Update(Guid id, PublicationCreateRequest dto)
     {
         var existing = await publicationRepository.GetById(id);
         mapper.Map(dto, existing);
@@ -150,7 +148,7 @@ public class PublicationService : IPublicationService
         return result;
     }
 
-    public async Task<CommentDto> AddComment(CommentCreateDto dto)
+    public async Task<CommentDto> AddComment(CommentCreateRequest dto)
     {
         var commentEntity = mapper.Map<Publication>(dto);
 

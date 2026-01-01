@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AltWirePoint.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class Account : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,6 +34,9 @@ namespace AltWirePoint.DataAccess.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: true),
+                    Role = table.Column<string>(type: "text", nullable: false),
+                    Logo = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true),
                     RefreshToken = table.Column<string>(type: "text", nullable: true),
                     RefreshTokenExpirationDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -54,6 +57,21 @@ namespace AltWirePoint.DataAccess.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PermissionsForRoles",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    PackedPermissions = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PermissionsForRoles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -162,31 +180,74 @@ namespace AltWirePoint.DataAccess.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "AspNetRoles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[,]
+            migrationBuilder.CreateTable(
+                name: "Publications",
+                columns: table => new
                 {
-                    { new Guid("3f1d2e4c-5b6a-7d8e-9f01-2a3b4c5d6e7f"), "82faf5bb-89bd-4481-9901-81b29afaa675", "Admin", "ADMIN" },
-                    { new Guid("4a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d"), "7b8f227d-f667-43f6-b7af-7446fb0c9901", "User", "USER" }
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: true),
+                    Image64 = table.Column<string>(type: "text", nullable: true),
+                    PostedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    AuthorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ParentId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Publications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Publications_AspNetUsers_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Publications_Publications_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Publications",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Likes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AuthorId = table.Column<Guid>(type: "uuid", nullable: true),
+                    PublicationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    IsLiked = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Likes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Likes_AspNetUsers_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Likes_Publications_PublicationId",
+                        column: x => x.PublicationId,
+                        principalTable: "Publications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RefreshToken", "RefreshTokenExpirationDateTime", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Description", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "Logo", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RefreshToken", "RefreshTokenExpirationDateTime", "Role", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { new Guid("9c8b8e2e-4f3a-4d2e-bf4a-e5c8a1b2c3d4"), 0, "46d48247-545f-4b31-bbc6-00a256029a63", "USER@AltWirePoint.LOCAL", true, false, null, null, "USER@AltWirePoint.LOCAL", "USER", "AQAAAAIAAYagAAAAEHyN9vBYsq1g30GLH0160VnBLRjI2JOOfJfgdzqrf9yAew5hv6LvWz/KX+vjZlbkcw==", null, false, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "1a6b9830-7a4e-4075-9dbc-d4349fc12a1a", false, "user@AltWirePoint.local" },
-                    { new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"), 0, "1739e1fa-9953-40dc-ae10-65327a26873c", "admin@AltWirePoint.local", true, false, null, null, "ADMIN@AltWirePoint.LOCAL", "ADMIN@AltWirePoint.LOCAL", "AQAAAAIAAYagAAAAEMyYuUGpY6H6qIqX3kxhhFCfNd0IV89ne6bany9UGkcoO0rt4PbxQmSIuS2aD9o72w==", null, false, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "17d90e4c-dcde-42ea-83e6-96cd7ade1432", false, "admin@AltWirePoint.local" }
+                    { new Guid("9c8b8e2e-4f3a-4d2e-bf4a-e5c8a1b2c3d4"), 0, "81907DB4-6C91-494E-9B2D-0F4F242A684C", null, "user@AltWirePoint.local", true, false, null, null, null, "USER@ALTWIREPOINT.LOCAL", "USER@ALTWIREPOINT.LOCAL", "AQAAAAIAAYagAAAAEC2l7yHDJzpL5dE6/zWXxKASLKXXv2wb4tnJIdr7YT0rtuvgC1djEUeS1RjLEG3p3Q==", null, false, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "User", "071C8A63-8F4C-4732-A2C3-54F5E87D0343", false, "user@AltWirePoint.local" },
+                    { new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"), 0, "D0596395-5E13-4B9F-8B57-550797A2E29B", null, "admin@AltWirePoint.local", true, false, null, null, null, "ADMIN@ALTWIREPOINT.LOCAL", "ADMIN@ALTWIREPOINT.LOCAL", "AQAAAAIAAYagAAAAEKFwG0rjyVGeyL3VFTvtdjIoHOnY3dtlBm9RGWi5AuWBII8HWVFYipPu4e0qC3t2uQ==", null, false, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Admin", "78641975-6548-4394-814B-E08F4C873394", false, "admin@AltWirePoint.local" }
                 });
 
             migrationBuilder.InsertData(
-                table: "AspNetUserRoles",
-                columns: new[] { "RoleId", "UserId" },
+                table: "PermissionsForRoles",
+                columns: new[] { "Id", "Description", "PackedPermissions", "RoleName" },
                 values: new object[,]
                 {
-                    { new Guid("4a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d"), new Guid("9c8b8e2e-4f3a-4d2e-bf4a-e5c8a1b2c3d4") },
-                    { new Guid("3f1d2e4c-5b6a-7d8e-9f01-2a3b4c5d6e7f"), new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479") }
+                    { 1L, "Default permissions for user role", "CgsMDRQV", "User" },
+                    { 2L, "Default permissions for admin role", "/w4yMw==", "Admin" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -225,6 +286,26 @@ namespace AltWirePoint.DataAccess.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Likes_AuthorId",
+                table: "Likes",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Likes_PublicationId",
+                table: "Likes",
+                column: "PublicationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Publications_AuthorId",
+                table: "Publications",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Publications_ParentId",
+                table: "Publications",
+                column: "ParentId");
         }
 
         /// <inheritdoc />
@@ -246,7 +327,16 @@ namespace AltWirePoint.DataAccess.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Likes");
+
+            migrationBuilder.DropTable(
+                name: "PermissionsForRoles");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Publications");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

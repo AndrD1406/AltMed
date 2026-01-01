@@ -1,50 +1,61 @@
 ﻿using AltWirePoint.BusinessLogic.Models.Identity;
 using AltWirePoint.BusinessLogic.Services.Interfaces;
+using AltWirePoint.Common;
+using AltWirePoint.DataAccess;
 using AltWirePoint.DataAccess.Identity;
+using AltWirePoint.DataAccess.Models;
+using AltWirePoint.DataAccess.Repository.Base;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AltWirePoint.BusinessLogic.Services;
 
 public class JwtService : IJwtService
 {
-    //to read Jwt configuration from appsettings.json
     private readonly IConfiguration configuration;
-    // size of key must be greater than 256 bites
+    private readonly IEntityRepository<long, PermissionsForRole> permissionsRepository;
     private readonly string key;
 
-    public JwtService(IConfiguration config)
+    public JwtService(
+        IConfiguration configration,
+        IEntityRepository<long, PermissionsForRole> permissionsRepository)
     {
-        configuration = config;
+        this.configuration = configration;
+        this.permissionsRepository = permissionsRepository;
         key = configuration["Jwt:Key"];
     }
 
-    public AuthenticationResponse CreateJwtToken(ApplicationUser user)
+    public async Task<AuthenticationResponse> CreateJwtToken(ApplicationUser user)
     {
+        // Get the permissions for this specific role
+        var roles = await permissionsRepository
+            .GetByFilter(p => p.RoleName == user.Role);
+
+        var rolePermissions = roles.FirstOrDefault();
+
+        // Default to empty if role not found (or handle as error depending on preference)
+        var packedPermissions = rolePermissions?.PackedPermissions ?? string.Empty;
+
         var accessExpiration = DateTime.UtcNow
             .AddMinutes(Convert.ToDouble(configuration["Jwt:AccessTokenExpirationMinutes"]));
         var refreshExpiration = DateTime.UtcNow
             .AddMinutes(Convert.ToDouble(configuration["Jwt:RefreshTokenExpirationMinutes"]));
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
-        new Claim(ClaimTypes.NameIdentifier, user.Email),
-        new Claim(ClaimTypes.Name, user.UserName),
-        new Claim(ClaimTypes.Email, user.Email)
-    };
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), 
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(IdentityResourceClaimsTypes.Permissions, packedPermissions)
+        };
 
-        var keyBytes = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]);
+        var keyBytes = Encoding.UTF8.GetBytes(key);
         var securityKey = new SymmetricSecurityKey(keyBytes);
         var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -55,6 +66,7 @@ public class JwtService : IJwtService
             expires: accessExpiration,
             signingCredentials: signingCredentials
         );
+
         var encodedToken = new JwtSecurityTokenHandler().WriteToken(jwt);
 
         return new AuthenticationResponse
@@ -68,7 +80,6 @@ public class JwtService : IJwtService
         };
     }
 
-    //Creates a refresh token (base 64 string of random numbers)
     private string GenerateRefreshToken()
     {
         byte[] bytes = new byte[64];
@@ -87,32 +98,29 @@ public class JwtService : IJwtService
             ValidIssuer = configuration["Jwt:Issuer"],
 
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"])),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
 
-            //method called when token is expired
             ValidateLifetime = false,
         };
 
         JwtSecurityTokenHandler jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
 
-        ClaimsPrincipal principal = null;
-
         try
         {
-            principal = jwtSecurityTokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+            var principal = jwtSecurityTokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
 
             if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new SecurityTokenException("Invalid token");
             }
+
+            return principal;
         }
         catch (Exception exc)
         {
             Console.WriteLine(exc.Message);
             throw;
         }
-
-        return principal;
     }
 }
