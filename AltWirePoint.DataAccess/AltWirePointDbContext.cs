@@ -1,16 +1,12 @@
 ﻿using AltWirePoint.DataAccess.Identity;
 using AltWirePoint.DataAccess.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AltWirePoint.DataAccess;
 
-public class AltWirePointDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
+public partial class AltWirePointDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public virtual DbSet<Publication> Publications { get; set; }
     

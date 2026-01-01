@@ -5,10 +5,7 @@ using AltWirePoint.DataAccess.Models;
 using AltWirePoint.DataAccess.Repository.Base;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AltWirePoint.BusinessLogic.Services;
 

@@ -19,17 +19,15 @@ public class AccountController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> userManager;
     private readonly SignInManager<ApplicationUser> signInManager;
-    private readonly RoleManager<ApplicationRole> roleManager;
     private readonly IJwtService jwtService;
     private readonly IMapper mapper;
 
     public AccountController(UserManager<ApplicationUser> userMng,
-        SignInManager<ApplicationUser> signInMng, RoleManager<ApplicationRole> roleMng, IJwtService jwtSvc, IMapper mapp)
+        SignInManager<ApplicationUser> signInManager, IJwtService jwtService, IMapper mapp)
     {
-        userManager = userMng;
-        signInManager = signInMng;
-        roleManager = roleMng;
-        jwtService = jwtSvc;
+        this.userManager = userMng;
+        this.signInManager = signInManager;
+        this.jwtService = jwtService;
         mapper = mapp;
     }
 

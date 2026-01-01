@@ -1,10 +1,4 @@
 ﻿using AltWirePoint.BusinessLogic.Models;
-using AltWirePoint.DataAccess.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AltWirePoint.BusinessLogic.Services.Interfaces;
 
