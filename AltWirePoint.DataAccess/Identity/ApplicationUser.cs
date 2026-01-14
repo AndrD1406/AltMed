@@ -9,13 +9,13 @@ public class ApplicationUser : IdentityUser<Guid>
 
     public string Role { get; set; }
 
-    public string? RefreshToken { get; set; }
-
-    public DateTime RefreshTokenExpirationDateTime { get; set; }
-
     public string? Logo { get; set; }
 
     public string? Description { get; set; }
+
+    public string? RefreshToken { get; set; }
+
+    public DateTime RefreshTokenExpirationDateTime { get; set; }
 
     public virtual List<Publication>? Publications { get; set; }
 

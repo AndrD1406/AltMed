@@ -16,7 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AltWirePoint.BusinessLogic\AltWirePoint.BusinessLogic.csproj" />
-    <ProjectReference Include="..\AltWirePoint.DataAccess\AltWirePoint.DataAccess.csproj" />
+    <ProjectReference Include="..\AltWirePoint.Common\AltWirePoint.Common.csproj" />
+	  <ProjectReference Include="..\AltWirePoint.DataAccess\AltWirePoint.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>

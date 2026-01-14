@@ -12,6 +12,8 @@ public partial class AltWirePointDbContext : IdentityDbContext<ApplicationUser, 
     
     public virtual DbSet<Like> Likes { get; set; }
 
+    public virtual DbSet<PermissionsForRole> PermissionsForRoles { get; set; }
+
     public AltWirePointDbContext(DbContextOptions<AltWirePointDbContext> options)
         : base(options)
     {
