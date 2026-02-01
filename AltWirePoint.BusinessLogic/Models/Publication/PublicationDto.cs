@@ -1,13 +1,4 @@
-﻿using AltWirePoint.DataAccess.Identity;
-using AltWirePoint.DataAccess.Models;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AltWirePoint.BusinessLogic.Models;
+﻿namespace AltWirePoint.BusinessLogic.Models.Publication;
 
 public class PublicationDto
 {

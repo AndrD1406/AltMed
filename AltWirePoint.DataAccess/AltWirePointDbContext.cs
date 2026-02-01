@@ -1,20 +1,19 @@
-﻿using AltWirePoint.DataAccess.Identity;
+﻿using AltWirePoint.DataAccess.Extensions;
+using AltWirePoint.DataAccess.Identity;
 using AltWirePoint.DataAccess.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AltWirePoint.DataAccess;
 
-public class AltWirePointDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
+public partial class AltWirePointDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public virtual DbSet<Publication> Publications { get; set; }
     
     public virtual DbSet<Like> Likes { get; set; }
+
+    public virtual DbSet<PermissionsForRole> PermissionsForRoles { get; set; }
 
     public AltWirePointDbContext(DbContextOptions<AltWirePointDbContext> options)
         : base(options)
@@ -35,9 +34,10 @@ public class AltWirePointDbContext : IdentityDbContext<ApplicationUser, Applicat
         }
     }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AltWirePointDbContext).Assembly);
+        base.OnModelCreating(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(AltWirePointDbContext).Assembly);
+        builder.Seed();
     }
 }

@@ -17,53 +17,10 @@ namespace AltWirePoint.DataAccess.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.15")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("AltWirePoint.DataAccess.Identity.ApplicationRole", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex");
-
-                    b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("3f1d2e4c-5b6a-7d8e-9f01-2a3b4c5d6e7f"),
-                            ConcurrencyStamp = "3b221c7f-27df-421e-a427-1cfb6c3e90e0",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = new Guid("4a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d"),
-                            ConcurrencyStamp = "8450a9a5-20dd-4179-89f1-e623cbdc493d",
-                            Name = "User",
-                            NormalizedName = "USER"
-                        });
-                });
 
             modelBuilder.Entity("AltWirePoint.DataAccess.Identity.ApplicationUser", b =>
                 {
@@ -123,6 +80,10 @@ namespace AltWirePoint.DataAccess.Migrations
                     b.Property<DateTime>("RefreshTokenExpirationDateTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
@@ -149,16 +110,17 @@ namespace AltWirePoint.DataAccess.Migrations
                         {
                             Id = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2aa4dbb1-c001-4fbb-b2d4-2b1cdffaee1f",
+                            ConcurrencyStamp = "D0596395-5E13-4B9F-8B57-550797A2E29B",
                             Email = "admin@AltWirePoint.local",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
-                            NormalizedEmail = "ADMIN@AltWirePoint.LOCAL",
-                            NormalizedUserName = "ADMIN@AltWirePoint.LOCAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOxNXdAYbZfiudufyeHyRiULdrfRj+pKneNp9rueQVwZl7/IE27N9PCdhxJRsFBTNw==",
+                            NormalizedEmail = "ADMIN@ALTWIREPOINT.LOCAL",
+                            NormalizedUserName = "ADMIN@ALTWIREPOINT.LOCAL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKFwG0rjyVGeyL3VFTvtdjIoHOnY3dtlBm9RGWi5AuWBII8HWVFYipPu4e0qC3t2uQ==",
                             PhoneNumberConfirmed = false,
                             RefreshTokenExpirationDateTime = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            SecurityStamp = "19f440f4-6794-4c3a-8041-d12caeacdeb7",
+                            Role = "Admin",
+                            SecurityStamp = "78641975-6548-4394-814B-E08F4C873394",
                             TwoFactorEnabled = false,
                             UserName = "admin@AltWirePoint.local"
                         },
@@ -166,16 +128,17 @@ namespace AltWirePoint.DataAccess.Migrations
                         {
                             Id = new Guid("9c8b8e2e-4f3a-4d2e-bf4a-e5c8a1b2c3d4"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "64d74ac8-2217-4239-920b-9593a951368c",
-                            Email = "USER@AltWirePoint.LOCAL",
+                            ConcurrencyStamp = "81907DB4-6C91-494E-9B2D-0F4F242A684C",
+                            Email = "user@AltWirePoint.local",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
-                            NormalizedEmail = "USER@AltWirePoint.LOCAL",
-                            NormalizedUserName = "USER",
-                            PasswordHash = "AQAAAAIAAYagAAAAECH4FoX7OID/Xk9zkMje61IjFDuAUEjvvEOVM9Q8n2Ns5vudbfi9MR0KDGT5yX5BZw==",
+                            NormalizedEmail = "USER@ALTWIREPOINT.LOCAL",
+                            NormalizedUserName = "USER@ALTWIREPOINT.LOCAL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEC2l7yHDJzpL5dE6/zWXxKASLKXXv2wb4tnJIdr7YT0rtuvgC1djEUeS1RjLEG3p3Q==",
                             PhoneNumberConfirmed = false,
                             RefreshTokenExpirationDateTime = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            SecurityStamp = "58e20f04-5026-42a2-ba96-790cca88923f",
+                            Role = "User",
+                            SecurityStamp = "071C8A63-8F4C-4732-A2C3-54F5E87D0343",
                             TwoFactorEnabled = false,
                             UserName = "user@AltWirePoint.local"
                         });
@@ -203,6 +166,49 @@ namespace AltWirePoint.DataAccess.Migrations
                     b.HasIndex("PublicationId");
 
                     b.ToTable("Likes");
+                });
+
+            modelBuilder.Entity("AltWirePoint.DataAccess.Models.PermissionsForRole", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PackedPermissions")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PermissionsForRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Description = "Default permissions for user role",
+                            PackedPermissions = "CgsMDRQV",
+                            RoleName = "User"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Description = "Default permissions for admin role",
+                            PackedPermissions = "/w4yMw==",
+                            RoleName = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("AltWirePoint.DataAccess.Models.Publication", b =>
@@ -233,6 +239,33 @@ namespace AltWirePoint.DataAccess.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("Publications");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -317,18 +350,6 @@ namespace AltWirePoint.DataAccess.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
-                            RoleId = new Guid("3f1d2e4c-5b6a-7d8e-9f01-2a3b4c5d6e7f")
-                        },
-                        new
-                        {
-                            UserId = new Guid("9c8b8e2e-4f3a-4d2e-bf4a-e5c8a1b2c3d4"),
-                            RoleId = new Guid("4a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d")
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -386,7 +407,7 @@ namespace AltWirePoint.DataAccess.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("AltWirePoint.DataAccess.Identity.ApplicationRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -413,7 +434,7 @@ namespace AltWirePoint.DataAccess.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.HasOne("AltWirePoint.DataAccess.Identity.ApplicationRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)

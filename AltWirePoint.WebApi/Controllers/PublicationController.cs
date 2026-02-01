@@ -1,11 +1,13 @@
 ﻿using AltWirePoint.BusinessLogic.Models;
-using AltWirePoint.BusinessLogic.Services;
+using AltWirePoint.BusinessLogic.Models.Profile;
+using AltWirePoint.BusinessLogic.Models.Publication;
 using AltWirePoint.BusinessLogic.Services.Interfaces;
+using AltWirePoint.Common.PermissionManagement;
+using AltWirePoint.Common.PermissionModule.PolicyClasses;
 using AltWirePoint.DataAccess.Identity;
 using AltWirePoint.DataAccess.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -31,7 +33,7 @@ public class PublicationController : ControllerBase
     [Authorize]
     [ProducesResponseType(typeof(Publication), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] PublicationCreateDto publication)
+    public async Task<IActionResult> Create([FromBody] PublicationCreateRequest publication)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null)
@@ -118,7 +120,7 @@ public class PublicationController : ControllerBase
     [Authorize]
     [ProducesResponseType(typeof(CommentDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Comment([FromBody] CommentCreateDto dto)
+    public async Task<IActionResult> Comment([FromBody] CommentCreateRequest dto)
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var currentUserId))
@@ -168,7 +170,7 @@ public class PublicationController : ControllerBase
     [HttpPut]
     [Authorize]
     [ProducesResponseType(typeof(IEnumerable<PublicationDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PublicationDto>> Update(Guid id, [FromBody] PublicationCreateDto dto)
+    public async Task<ActionResult<PublicationDto>> Update(Guid id, [FromBody] PublicationCreateRequest dto)
     {
         var updated = await publicationService.Update(id, dto);
         return Ok(updated);

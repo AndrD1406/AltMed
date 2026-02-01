@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AltWirePoint.BusinessLogic.Models.Identity;
 
-public class LoginDto
+public class LoginRequest
 {
     [Required(ErrorMessage = "Email can't be blank")]
     [EmailAddress(ErrorMessage = "Email should be in a proper email address format")]

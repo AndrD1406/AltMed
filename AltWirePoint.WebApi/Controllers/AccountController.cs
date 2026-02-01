@@ -1,10 +1,9 @@
-﻿using AltWirePoint.BusinessLogic.Models;
-using AltWirePoint.BusinessLogic.Models.Identity;
+﻿using AltWirePoint.BusinessLogic.Models.Identity;
+using AltWirePoint.BusinessLogic.Models.Profile;
 using AltWirePoint.BusinessLogic.Services.Interfaces;
 using AltWirePoint.DataAccess.Identity;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,64 +18,42 @@ public class AccountController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> userManager;
     private readonly SignInManager<ApplicationUser> signInManager;
-    private readonly RoleManager<ApplicationRole> roleManager;
     private readonly IJwtService jwtService;
     private readonly IMapper mapper;
 
-    public AccountController(UserManager<ApplicationUser> userMng,
-        SignInManager<ApplicationUser> signInMng, RoleManager<ApplicationRole> roleMng, IJwtService jwtSvc, IMapper mapp)
+    public AccountController(UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager, IJwtService jwtService, IMapper mapp)
     {
-        userManager = userMng;
-        signInManager = signInMng;
-        roleManager = roleMng;
-        jwtService = jwtSvc;
+        this.userManager = userManager;
+        this.signInManager = signInManager;
+        this.jwtService = jwtService;
         mapper = mapp;
     }
 
-    [AllowAnonymous]
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Register(RegisterDto registerDto)
+    public async Task<IActionResult> Register(RegisterRequest registerRequest)
     {
-        // Validation 
-        if (!ModelState.IsValid)
-        {
-            string errorMessages = string.Join(" | ", ModelState.Values.SelectMany(x => x.Errors).Select(e => e.ErrorMessage));
-            return Problem(errorMessages);
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        // Create user
-        ApplicationUser user = mapper.Map<ApplicationUser>(registerDto);
+        var user = mapper.Map<ApplicationUser>(registerRequest);
 
-        IdentityResult result = null;
-        try
-        {
-            result = await userManager.CreateAsync(user, registerDto.Password);
-        }
-        catch (Exception exc)
-        {
-            Console.WriteLine(exc.Message);
-        }
+        var result = await userManager.CreateAsync(user, registerRequest.Password);
 
         if (result.Succeeded)
         {
-            // sign-in
-            // isPersister: false - must be deleted automatically when the browser is closed
-            await signInManager.SignInAsync(user, isPersistent: false);
+            var authenticationResponse = await jwtService.CreateJwtToken(user);
 
-            var authenticationResponse = jwtService.CreateJwtToken(user);
             user.RefreshToken = authenticationResponse.RefreshToken;
-
             user.RefreshTokenExpirationDateTime = authenticationResponse.RefreshTokenExpirationDateTime;
             await userManager.UpdateAsync(user);
 
             return Ok(authenticationResponse);
         }
 
-        string errorMessage = string.Join(" | ", result.Errors.Select(e => e.Description));
-        return Problem(errorMessage);
+        return BadRequest(result.Errors);
     }
 
     [HttpGet]
@@ -91,60 +68,62 @@ public class AccountController : ControllerBase
         return Ok(false);
     }
 
+    [HttpPost("login")]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto loginDto)
+    public async Task<IActionResult> Login(LoginRequest loginRequest)
     {
-        // Validation 
-        if (!ModelState.IsValid)
-        {
-            string errorMessages = string.Join(" | ", ModelState.Values.SelectMany(x => x.Errors).Select(e => e.ErrorMessage));
-            return BadRequest(errorMessages);
-        }
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var result = await signInManager.PasswordSignInAsync(loginDto.Email, loginDto.Password, isPersistent: false, lockoutOnFailure: false);
+        var user = await userManager.FindByEmailAsync(loginRequest.Email);
+        if (user == null) return BadRequest("Invalid email or password");
+
+        var result = await signInManager.CheckPasswordSignInAsync(
+            user,
+            loginRequest.Password,
+            lockoutOnFailure: true
+        );
 
         if (result.Succeeded)
         {
-            ApplicationUser? user = await userManager.FindByEmailAsync(loginDto.Email);
+            var authenticationResponse = await jwtService.CreateJwtToken(user);
 
-            if (user == null)
-                return NoContent();
-
-            await signInManager.SignInAsync(user, isPersistent: false);
-
-            var authenticationResponse = jwtService.CreateJwtToken(user);
             user.RefreshToken = authenticationResponse.RefreshToken;
-
             user.RefreshTokenExpirationDateTime = authenticationResponse.RefreshTokenExpirationDateTime;
-            try
-            {
-                await userManager.UpdateAsync(user);
-            }
-            catch (Exception exc)
-            {
-                Console.WriteLine($"await userManager.UpdateAsync(user): {exc.Message}");
-            }
+            await userManager.UpdateAsync(user);
 
             return Ok(authenticationResponse);
         }
+
+        if (result.IsLockedOut)
+        {
+            return BadRequest("Account is locked out. Try again later.");
+        }
+
         return BadRequest("Invalid email or password");
     }
 
-    [HttpGet("logout")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [Authorize]
+    [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        await signInManager.SignOutAsync();
-        Response.Cookies.Delete("refreshToken");
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId != null)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                user.RefreshToken = null;
+                user.RefreshTokenExpirationDateTime = DateTime.MinValue;
+                await userManager.UpdateAsync(user);
+            }
+        }
 
         return NoContent();
     }
 
     [HttpPost("refresh")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Refresh(TokenModel tokenModel)
@@ -172,7 +151,7 @@ public class AccountController : ControllerBase
             return BadRequest("Invalid refresh token");
         }
 
-        AuthenticationResponse authenticationResponse = jwtService.CreateJwtToken(user);
+        AuthenticationResponse authenticationResponse = await jwtService.CreateJwtToken(user);
 
         user.RefreshToken = authenticationResponse.RefreshToken;
         user.RefreshTokenExpirationDateTime = authenticationResponse.RefreshTokenExpirationDateTime;
@@ -186,9 +165,9 @@ public class AccountController : ControllerBase
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        if (dto.NewPassword != dto.ConfirmPassword)
+        if (request.NewPassword != request.ConfirmPassword)
             return BadRequest("New password and confirmation do not match.");
 
         var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
@@ -198,8 +177,8 @@ public class AccountController : ControllerBase
 
         var result = await userManager.ChangePasswordAsync(
             user,
-            dto.CurrentPassword,
-            dto.NewPassword
+            request.CurrentPassword,
+            request.NewPassword
         );
 
         if (!result.Succeeded)
@@ -212,20 +191,19 @@ public class AccountController : ControllerBase
     [Authorize]
     [ProducesResponseType(typeof(ProfileDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> EditProfile([FromBody] EditProfileDto dto)
+    public async Task<IActionResult> EditProfile([FromBody] ProfileEditRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-            return Unauthorized();
+
+        if (userId == null) return Unauthorized();
 
         var user = await userManager.FindByIdAsync(userId);
-        if (user == null)
-            return NotFound();
+        if (user == null) return NotFound();
 
-        if (!string.IsNullOrWhiteSpace(dto.Name))
-            user.Name = dto.Name;
-        if (!string.IsNullOrWhiteSpace(dto.Logo))
-            user.Logo = dto.Logo;
+        if (!string.IsNullOrWhiteSpace(request.Name))
+            user.Name = request.Name;
+        if (!string.IsNullOrWhiteSpace(request.Logo))
+            user.Logo = request.Logo;
 
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)

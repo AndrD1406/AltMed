@@ -1,20 +1,20 @@
-using System;
-using System.Text;
+using AltWirePoint.BusinessLogic.Models.Identity;
+using AltWirePoint.BusinessLogic.Services;
+using AltWirePoint.BusinessLogic.Services.Interfaces;
+using AltWirePoint.BusinessLogic.Util;
+using AltWirePoint.Common.PermissionModule.PolicyClasses;
 using AltWirePoint.DataAccess;
 using AltWirePoint.DataAccess.Identity;
-using AltWirePoint.BusinessLogic.Services;
+using AltWirePoint.DataAccess.Repository.Base;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using AltWirePoint.BusinessLogic.Services.Interfaces;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using AltWirePoint.BusinessLogic.Util;
-using AltWirePoint.DataAccess.Repository.Base;
-using AltWirePoint.BusinessLogic.Models.Identity;
+using Microsoft.OpenApi;
+using System.Text;
 
 namespace AltWirePoint.WebApi;
 
@@ -37,20 +37,23 @@ public class Program
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
                    .UseLazyLoadingProxies());
 
-        builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+        builder.Services.AddIdentityCore<ApplicationUser>(options =>
         {
             options.Password.RequireDigit = false;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
         })
         .AddEntityFrameworkStores<AltWirePointDbContext>()
-        .AddUserStore<UserStore<ApplicationUser, ApplicationRole, AltWirePointDbContext, Guid>>()
-        .AddRoleStore<RoleStore<ApplicationRole, AltWirePointDbContext, Guid>>()
-        .AddDefaultTokenProviders();
+        .AddDefaultTokenProviders()
+        .AddSignInManager<SignInManager<ApplicationUser>>();
 
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
         builder.Services.AddScoped(typeof(IEntityRepository<,>), typeof(EntityRepository<,>));
+
+        // Register the Permission policy handler
+        builder.Services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
+        builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
         builder.Services.AddTransient<IJwtService, JwtService>();
         builder.Services.AddScoped<IPublicationService, PublicationService>();
@@ -91,7 +94,6 @@ public class Program
                 .Build();
             options.Filters.Add(new AuthorizeFilter(policy));
         });
-        builder.Services.AddOpenApiDocument();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
@@ -104,14 +106,11 @@ public class Program
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header
             });
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-                    },
-                    Array.Empty<string>()
+                    new OpenApiSecuritySchemeReference("Bearer"),
+                    new List<string>()
                 }
             });
         });

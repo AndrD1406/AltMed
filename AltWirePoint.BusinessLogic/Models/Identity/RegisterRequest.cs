@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AltWirePoint.BusinessLogic.Models.Identity;
 
-public class RegisterDto
+public class RegisterRequest
 {
     [Required(ErrorMessage = "Person Name can't be blank")]
     public string UserName { get; set; } = string.Empty;
